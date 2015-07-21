@@ -3,21 +3,19 @@
  @param params.insert an object to insert into your database
  @param params.collection the collection to insert it into
  */
+ 
+var DB = null;
+var MongoClient = require('mongodb').MongoClient;
+//  Could not locate any valid servers in initial seed list
+// https://csc-t-f5cwcv4zkjaruihb4m4quwfk-dev.ac.gen.ric.feedhenry.com/cloud/mongodb?collection=blah&insert=%7B%22name%22%3A%22brian%22%7D
+ MongoClient.connect(process.env.FH_MONGODB_CONN_URL, function(err, db) {
+  if (err) throw err;
+  DB = db;
+})
+
 exports.mongodb = function(params, cb) {
-  var MongoClient = require('mongodb').MongoClient,
-    user = process.env.MONGODB_USER,
-    password = process.env.MONGODB_PASSWORD,
-    upString = (typeof user === 'string' && typeof password === 'string') ? user + ":" + password : "",
-    database = process.env.MONGODB_DATABASE,
-    host = process.env.MONGODB_HOST;
-
-  MongoClient.connect('mongodb://' + upString + '@' + host + '/' + database, function(err, db) {
-    if (err) return cb(err);
-
-    var collection = db.collection(params.collection);
-    collection.insert(params.insert, function(err, docs) {
-      db.close();
-      return cb(null, docs);
-    });
-  })
+  var collection = DB.collection(params.collection);
+  collection.insert(JSON.parse(params.insert), function(err, docs) {
+    return cb(null, docs);
+  });
 };
